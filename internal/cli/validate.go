@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/funapy-sandbox/actions-jobkeeper/internal/github"
+	"github.com/funapy-sandbox/actions-jobkeeper/internal/validators"
 	"github.com/funapy-sandbox/actions-jobkeeper/internal/validators/status"
 	"github.com/spf13/cobra"
 )
@@ -36,7 +37,15 @@ func validateCmd() *cobra.Command {
 			if len(args) > 0 {
 				jobName = args[0]
 			}
-			return doValidateCmd(cmd.Context(), jobName)
+
+			ctx := cmd.Context()
+
+			statusValidator := status.CreateValidator(github.NewClient(ctx, ghToken),
+				status.WithTargetJob(jobName),
+				status.WithGitHubOwnerAndRepo(ghOwner, ghRepo),
+				status.WithGitHubRef(ghRef),
+			)
+			return doValidateCmd(ctx, statusValidator)
 		},
 	}
 
@@ -54,28 +63,33 @@ func validateCmd() *cobra.Command {
 	return cmd
 }
 
-func doValidateCmd(ctx context.Context, targetJobName string) error {
+func doValidateCmd(ctx context.Context, vs ...validators.Validator) error {
 	timeoutT := time.NewTicker(time.Duration(timeoutSecond) * time.Second)
 	defer timeoutT.Stop()
 
 	invalT := time.NewTicker(time.Duration(validateInvalSecond) * time.Second)
 	defer invalT.Stop()
 
-	statusValidator := status.CreateValidator(github.NewClient(ctx, ghToken),
-		status.WithTargetJob(targetJobName),
-		status.WithGitHubOwnerAndRepo(ghOwner, ghRepo),
-		status.WithGitHubRef(ghRef),
-	)
-
 	for {
 		select {
 		case <-ctx.Done():
-			return nil
+			return ctx.Err()
 		case <-timeoutT.C:
-			return errors.New("timeout validate")
+			return errors.New("validation is timeout")
 		case <-invalT.C:
-			if err := statusValidator.Validate(ctx); err != nil {
-				return err
+			var successCnt int
+			for _, validator := range vs {
+				err := validator.Validate(ctx)
+				if err != nil {
+					if !errors.Is(err, validators.ErrValidate) {
+						return err
+					}
+				} else {
+					successCnt++
+				}
+			}
+			if successCnt == len(vs) {
+				return nil
 			}
 		}
 	}
