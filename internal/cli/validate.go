@@ -20,6 +20,7 @@ var (
 	ghRef               string
 	timeoutSecond       uint
 	validateInvalSecond uint
+	targetJobName       string
 )
 
 func validateCmd() *cobra.Command {
@@ -28,20 +29,17 @@ func validateCmd() *cobra.Command {
 		Short: "Validate github actions job",
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {
-				return errors.New("target job context is not set")
+				targetJobName = defaultJobName
+				return nil
 			}
+			targetJobName = args[0]
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			jobName := defaultJobName
-			if len(args) > 0 {
-				jobName = args[0]
-			}
-
 			ctx := cmd.Context()
 
 			statusValidator := status.CreateValidator(github.NewClient(ctx, ghToken),
-				status.WithTargetJob(jobName),
+				status.WithTargetJob(targetJobName),
 				status.WithGitHubOwnerAndRepo(ghOwner, ghRepo),
 				status.WithGitHubRef(ghRef),
 			)
