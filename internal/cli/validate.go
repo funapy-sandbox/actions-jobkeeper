@@ -78,6 +78,7 @@ func doValidateCmd(cmd *cobra.Command, vs ...validators.Validator) error {
 		case <-timeoutT.C:
 			return errors.New("validation is timeout")
 		case <-invalT.C:
+			cmd.Print("start to validate")
 			var successCnt int
 			for _, validator := range vs {
 				err := validator.Validate(ctx)
@@ -85,11 +86,13 @@ func doValidateCmd(cmd *cobra.Command, vs ...validators.Validator) error {
 					if !errors.Is(err, validators.ErrValidate) {
 						return err
 					}
+					cmd.PrintErr(err)
 					break
 				} else {
 					successCnt++
 				}
 			}
+			cmd.Print("finish to validate")
 			if successCnt == len(vs) {
 				return nil
 			}
