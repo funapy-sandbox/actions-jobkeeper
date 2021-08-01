@@ -9,6 +9,8 @@ import (
 
 const (
 	successState = "success"
+	errorState   = "error"
+	pendingState = "pending"
 )
 
 type statusValidator struct {
@@ -27,7 +29,6 @@ func CreateValidator(c github.Client, opts ...Option) validators.Validator {
 	for _, opt := range opts {
 		opt(sv)
 	}
-
 	return sv
 }
 
@@ -35,6 +36,11 @@ func (sv *statusValidator) Validate(ctx context.Context) error {
 	status, _, err := sv.client.ListStatuses(ctx, sv.owner, sv.repo, sv.ref, &github.ListOptions{})
 	if err != nil {
 		return err
+	}
+
+	// When there is no job other than the target job.
+	if len(status) == 1 {
+		return nil
 	}
 
 	var successJobCnt int
