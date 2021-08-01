@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"context"
 	"errors"
 	"time"
 
@@ -45,7 +44,7 @@ func validateCmd() *cobra.Command {
 				status.WithGitHubOwnerAndRepo(ghOwner, ghRepo),
 				status.WithGitHubRef(ghRef),
 			)
-			return doValidateCmd(ctx, statusValidator)
+			return doValidateCmd(cmd, statusValidator)
 		},
 	}
 
@@ -63,7 +62,9 @@ func validateCmd() *cobra.Command {
 	return cmd
 }
 
-func doValidateCmd(ctx context.Context, vs ...validators.Validator) error {
+func doValidateCmd(cmd *cobra.Command, vs ...validators.Validator) error {
+	ctx := cmd.Context()
+
 	timeoutT := time.NewTicker(time.Duration(timeoutSecond) * time.Second)
 	defer timeoutT.Stop()
 
@@ -84,6 +85,7 @@ func doValidateCmd(ctx context.Context, vs ...validators.Validator) error {
 					if !errors.Is(err, validators.ErrValidate) {
 						return err
 					}
+					break
 				} else {
 					successCnt++
 				}
