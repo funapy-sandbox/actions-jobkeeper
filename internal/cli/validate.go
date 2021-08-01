@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"errors"
 	"time"
 
@@ -44,7 +45,7 @@ func validateCmd() *cobra.Command {
 				status.WithGitHubOwnerAndRepo(ghOwner, ghRepo),
 				status.WithGitHubRef(ghRef),
 			)
-			return doValidateCmd(cmd, statusValidator)
+			return doValidateCmd(ctx, cmd, statusValidator)
 		},
 	}
 
@@ -62,9 +63,7 @@ func validateCmd() *cobra.Command {
 	return cmd
 }
 
-func doValidateCmd(cmd *cobra.Command, vs ...validators.Validator) error {
-	ctx := cmd.Context()
-
+func doValidateCmd(ctx context.Context, logger logger, vs ...validators.Validator) error {
 	timeoutT := time.NewTicker(time.Duration(timeoutSecond) * time.Second)
 	defer timeoutT.Stop()
 
@@ -78,7 +77,7 @@ func doValidateCmd(cmd *cobra.Command, vs ...validators.Validator) error {
 		case <-timeoutT.C:
 			return errors.New("validation is timeout")
 		case <-invalT.C:
-			cmd.Print("start to validate")
+			logger.Println("start to validate")
 			var successCnt int
 			for _, validator := range vs {
 				err := validator.Validate(ctx)
@@ -86,13 +85,13 @@ func doValidateCmd(cmd *cobra.Command, vs ...validators.Validator) error {
 					if !errors.Is(err, validators.ErrValidate) {
 						return err
 					}
-					cmd.PrintErr(err)
+					logger.PrintErrln(err)
 					break
 				} else {
 					successCnt++
 				}
 			}
-			cmd.Print("finish to validate")
+			logger.Println("finish to validate")
 			if successCnt == len(vs) {
 				return nil
 			}
