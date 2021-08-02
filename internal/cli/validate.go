@@ -27,14 +27,6 @@ func validateCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "validate",
 		Short: "Validate github actions job",
-		Args: func(cmd *cobra.Command, args []string) error {
-			if len(args) == 0 {
-				targetJobName = defaultJobName
-				return nil
-			}
-			targetJobName = args[0]
-			return nil
-		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
 
@@ -47,16 +39,23 @@ func validateCmd() *cobra.Command {
 		},
 	}
 
-	cmd.PersistentFlags().StringVarP(&ghRepo, "repo", "r", "", "set github repository")
-	cmd.MarkPersistentFlagRequired("repo")
+	cmd.PersistentFlags().StringVarP(&targetJobName, "job", "j", defaultJobName, "set target job name")
+	cmd.MarkPersistentFlagRequired("job")
+
 	cmd.PersistentFlags().StringVarP(&ghOwner, "owner", "o", "", "set owner of github repository")
 	cmd.MarkPersistentFlagRequired("owpner")
+
+	cmd.PersistentFlags().StringVarP(&ghRepo, "repo", "r", "", "set github repository")
+	cmd.MarkPersistentFlagRequired("repo")
+
 	cmd.PersistentFlags().StringVar(&ghRef, "ref", "", "set ref of github repository. the ref can be a SHA, a branch name, or tag name")
 	cmd.MarkPersistentFlagRequired("ref")
+
 	cmd.PersistentFlags().UintVar(&timeoutSecond, "timeout", 600, "set validate timeout second")
 	cmd.MarkPersistentFlagRequired("timeout")
+
 	cmd.PersistentFlags().UintVar(&validateInvalSecond, "interval", 120, "set validate interval second")
-	cmd.MarkPersistentFlagRequired("timeout")
+	cmd.MarkPersistentFlagRequired("interval")
 
 	return cmd
 }
