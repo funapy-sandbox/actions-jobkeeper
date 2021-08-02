@@ -10,10 +10,12 @@ import (
 type (
 	ListOptions    = github.ListOptions
 	CombinedStatus = github.CombinedStatus
+	RepoStatus     = github.RepoStatus
 	Response       = github.Response
 )
 
 type (
+	CheckRun             = github.CheckRun
 	ListCheckRunsOptions = github.ListCheckRunsOptions
 	ListCheckRunsResults = github.ListCheckRunsResults
 )

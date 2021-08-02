@@ -104,7 +104,7 @@ func (sv *statusValidator) listStatuses(ctx context.Context) ([]*contextStatus, 
 			continue
 		}
 
-		switch *run.Status {
+		switch *run.Conclusion {
 		case checkRunNeutralConclusion, checkRunSuccessConclusion:
 			contextStatus.State = successState
 		default:

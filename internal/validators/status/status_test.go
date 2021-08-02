@@ -1,6 +1,8 @@
 package status
 
 import (
+	"context"
+	"errors"
 	"reflect"
 	"testing"
 
@@ -285,3 +287,156 @@ func TestCreateValidator(t *testing.T) {
 // 		})
 // 	}
 // }
+
+func Test_statusValidator_Validate(t *testing.T) {
+	type fields struct {
+		token         string
+		repo          string
+		owner         string
+		ref           string
+		targetJobName string
+		client        github.Client
+	}
+	type test struct {
+		fields  fields
+		ctx     context.Context
+		wantErr bool
+		want    []*contextStatus
+	}
+	tests := map[string]test{
+		"returns error when the GetCombinedStatus returns an error": func() test {
+			c := &mock.Client{
+				GetCombinedStatusFunc: func(ctx context.Context, owner, repo, ref string, opts *github.ListOptions) (*github.CombinedStatus, *github.Response, error) {
+					return nil, nil, errors.New("err")
+				},
+			}
+			return test{
+				fields: fields{
+					client:        c,
+					targetJobName: "target-job",
+					owner:         "test-owner",
+					repo:          "test-repo",
+					ref:           "main",
+				},
+				wantErr: true,
+			}
+		}(),
+		"returns error when the ListCheckRunsForRef returns an error": func() test {
+			c := &mock.Client{
+				GetCombinedStatusFunc: func(ctx context.Context, owner, repo, ref string, opts *github.ListOptions) (*github.CombinedStatus, *github.Response, error) {
+					return &github.CombinedStatus{}, nil, nil
+				},
+				ListCheckRunsForRefFunc: func(ctx context.Context, owner, repo, ref string, opts *github.ListCheckRunsOptions) (*github.ListCheckRunsResults, *github.Response, error) {
+					return nil, nil, errors.New("error")
+				},
+			}
+			return test{
+				fields: fields{
+					client:        c,
+					targetJobName: "target-job",
+					owner:         "test-owner",
+					repo:          "test-repo",
+					ref:           "main",
+				},
+				wantErr: true,
+			}
+		}(),
+		"returns nil when the no error occurs": func() test {
+			c := &mock.Client{
+				GetCombinedStatusFunc: func(ctx context.Context, owner, repo, ref string, opts *github.ListOptions) (*github.CombinedStatus, *github.Response, error) {
+					return &github.CombinedStatus{
+						Statuses: []github.RepoStatus{
+							{},
+							{
+								Context: stringPtr("job-01"),
+								State:   stringPtr(successState),
+							},
+						},
+					}, nil, nil
+				},
+				ListCheckRunsForRefFunc: func(ctx context.Context, owner, repo, ref string, opts *github.ListCheckRunsOptions) (*github.ListCheckRunsResults, *github.Response, error) {
+					return &github.ListCheckRunsResults{
+						CheckRuns: []*github.CheckRun{
+							{},
+							{
+								Name:   stringPtr("job-02"),
+								Status: stringPtr("failure"),
+							},
+							{
+								Name:       stringPtr("job-03"),
+								Status:     stringPtr(checkRunCompletedStatus),
+								Conclusion: stringPtr(checkRunNeutralConclusion),
+							},
+							{
+								Name:       stringPtr("job-04"),
+								Status:     stringPtr(checkRunCompletedStatus),
+								Conclusion: stringPtr(checkRunSuccessConclusion),
+							},
+							{
+								Name:       stringPtr("job-05"),
+								Status:     stringPtr(checkRunCompletedStatus),
+								Conclusion: stringPtr("failure"),
+							},
+						},
+					}, nil, nil
+				},
+			}
+			return test{
+				fields: fields{
+					client:        c,
+					targetJobName: "target-job",
+					owner:         "test-owner",
+					repo:          "test-repo",
+					ref:           "main",
+				},
+				wantErr: false,
+				want: []*contextStatus{
+					{
+						Context: "job-01",
+						State:   successState,
+					},
+					{
+						Context: "job-02",
+						State:   pendingState,
+					},
+					{
+						Context: "job-03",
+						State:   successState,
+					},
+					{
+						Context: "job-04",
+						State:   successState,
+					},
+					{
+						Context: "job-05",
+						State:   errorState,
+					},
+				},
+			}
+		}(),
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			sv := &statusValidator{
+				token:         tt.fields.token,
+				repo:          tt.fields.repo,
+				owner:         tt.fields.owner,
+				ref:           tt.fields.ref,
+				targetJobName: tt.fields.targetJobName,
+				client:        tt.fields.client,
+			}
+			got, err := sv.listStatuses(tt.ctx)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("statusValidator.listStatuses() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if got, want := len(got), len(tt.want); got != want {
+				t.Errorf("statusValidator.listStatuses() length = %v, want %v", got, want)
+			}
+			for i := range tt.want {
+				if !reflect.DeepEqual(got[i], tt.want[i]) {
+					t.Errorf("statusValidator.listStatuses() - %d = %v, want %v", i, got[i], tt.want[i])
+				}
+			}
+		})
+	}
+}
