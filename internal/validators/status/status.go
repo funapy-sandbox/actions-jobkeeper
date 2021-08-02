@@ -110,7 +110,6 @@ func (sv *statusValidator) listStatuses(ctx context.Context) ([]*contextStatus, 
 		default:
 			contextStatus.State = errorState
 		}
-
 		contextStatuses = append(contextStatuses, contextStatus)
 	}
 
