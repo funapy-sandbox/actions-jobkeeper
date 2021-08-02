@@ -8,13 +8,19 @@ import (
 )
 
 type (
-	ListOptions = github.ListOptions
-	RepoStatus  = github.RepoStatus
-	Response    = github.Response
+	ListOptions    = github.ListOptions
+	CombinedStatus = github.CombinedStatus
+	Response       = github.Response
+)
+
+type (
+	ListCheckRunsOptions = github.ListCheckRunsOptions
+	ListCheckRunsResults = github.ListCheckRunsResults
 )
 
 type Client interface {
-	ListStatuses(ctx context.Context, owner, repo, ref string, opts *ListOptions) ([]*RepoStatus, *Response, error)
+	GetCombinedStatus(ctx context.Context, owner, repo, ref string, opts *ListOptions) (*CombinedStatus, *Response, error)
+	ListCheckRunsForRef(ctx context.Context, owner, repo, ref string, opts *ListCheckRunsOptions) (*ListCheckRunsResults, *Response, error)
 }
 
 type client struct {
@@ -31,6 +37,10 @@ func NewClient(ctx context.Context, token string) Client {
 	}
 }
 
-func (c *client) ListStatuses(ctx context.Context, owner, repo, ref string, opts *ListOptions) ([]*RepoStatus, *Response, error) {
-	return c.ghc.Repositories.ListStatuses(ctx, owner, repo, ref, opts)
+func (c *client) GetCombinedStatus(ctx context.Context, owner, repo, ref string, opts *ListOptions) (*CombinedStatus, *Response, error) {
+	return c.ghc.Repositories.GetCombinedStatus(ctx, owner, repo, ref, opts)
+}
+
+func (c *client) ListCheckRunsForRef(ctx context.Context, owner, repo, ref string, opts *ListCheckRunsOptions) (*ListCheckRunsResults, *Response, error) {
+	return c.ghc.Checks.ListCheckRunsForRef(ctx, owner, repo, ref, opts)
 }

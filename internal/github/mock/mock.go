@@ -7,11 +7,16 @@ import (
 )
 
 type Client struct {
-	ListStatusesFunc func(ctx context.Context, owner, repo, ref string, opts *github.ListOptions) ([]*github.RepoStatus, *github.Response, error)
+	GetCombinedStatusFunc   func(ctx context.Context, owner, repo, ref string, opts *github.ListOptions) (*github.CombinedStatus, *github.Response, error)
+	ListCheckRunsForRefFunc func(ctx context.Context, owner, repo, ref string, opts *github.ListCheckRunsOptions) (*github.ListCheckRunsResults, *github.Response, error)
 }
 
-func (c *Client) ListStatuses(ctx context.Context, owner, repo, ref string, opts *github.ListOptions) ([]*github.RepoStatus, *github.Response, error) {
-	return c.ListStatusesFunc(ctx, owner, repo, ref, opts)
+func (c *Client) GetCombinedStatus(ctx context.Context, owner, repo, ref string, opts *github.ListOptions) (*github.CombinedStatus, *github.Response, error) {
+	return c.GetCombinedStatusFunc(ctx, owner, repo, ref, opts)
+}
+
+func (c *Client) ListCheckRunsForRef(ctx context.Context, owner, repo, ref string, opts *github.ListCheckRunsOptions) (*github.ListCheckRunsResults, *github.Response, error) {
+	return c.ListCheckRunsForRefFunc(ctx, owner, repo, ref, opts)
 }
 
 var (

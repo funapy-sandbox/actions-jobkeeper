@@ -2,7 +2,6 @@ package status
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/funapy-sandbox/actions-jobkeeper/internal/github"
 	"github.com/funapy-sandbox/actions-jobkeeper/internal/validators"
@@ -13,6 +12,20 @@ const (
 	errorState   = "error"
 	pendingState = "pending"
 )
+
+// NOTE: https://docs.github.com/en/rest/reference/checks
+const (
+	checkRunCompletedStatus = "completed"
+)
+const (
+	checkRunNeutralConclusion = "neutral"
+	checkRunSuccessConclusion = "success"
+)
+
+type contextStatus struct {
+	Context string
+	State   string
+}
 
 type statusValidator struct {
 	token         string
@@ -34,30 +47,71 @@ func CreateValidator(c github.Client, opts ...Option) validators.Validator {
 }
 
 func (sv *statusValidator) Validate(ctx context.Context) error {
-	status, _, err := sv.client.ListStatuses(ctx, sv.owner, sv.repo, sv.ref, &github.ListOptions{})
+	statuses, err := sv.listStatuses(ctx)
 	if err != nil {
 		return err
 	}
 
 	// When there is no job other than the target job.
-	if len(status) == 1 {
+	if len(statuses) <= 1 {
 		return nil
 	}
 
-	fmt.Println(status)
-
 	var successJobCnt int
-	for _, status := range status {
-		if status.Context == nil || status.State == nil {
-			continue
-		}
-		fmt.Println(status.Context)
-		if *status.Context != sv.targetJobName && *status.State == successState {
+	for _, status := range statuses {
+		if status.Context != sv.targetJobName && status.State == successState {
 			successJobCnt++
 		}
 	}
-	if len(status)-1 != successJobCnt {
+	if len(statuses)-1 != successJobCnt {
 		return validators.ErrValidate
 	}
 	return nil
+}
+
+func (sv *statusValidator) listStatuses(ctx context.Context) ([]*contextStatus, error) {
+	combined, _, err := sv.client.GetCombinedStatus(ctx, sv.owner, sv.repo, sv.ref, &github.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	contextStatuses := make([]*contextStatus, 0, len(combined.Statuses))
+	for _, s := range combined.Statuses {
+		if s.Context == nil || s.State == nil {
+			continue
+		}
+		contextStatuses = append(contextStatuses, &contextStatus{
+			Context: *s.Context,
+			State:   *s.State,
+		})
+	}
+
+	runResult, _, err := sv.client.ListCheckRunsForRef(ctx, sv.owner, sv.repo, sv.ref, &github.ListCheckRunsOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	for _, run := range runResult.CheckRuns {
+		if run.Name == nil || run.Status == nil {
+			continue
+		}
+		contextStatus := &contextStatus{
+			Context: *run.Name,
+		}
+		if *run.Status != checkRunCompletedStatus {
+			contextStatus.State = pendingState
+			contextStatuses = append(contextStatuses, contextStatus)
+			continue
+		}
+
+		switch *run.Status {
+		case checkRunNeutralConclusion, checkRunSuccessConclusion:
+			contextStatus.State = successState
+		default:
+			contextStatus.State = errorState
+		}
+
+		contextStatuses = append(contextStatuses, contextStatus)
+	}
+	return nil, nil
 }
