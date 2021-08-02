@@ -4,6 +4,10 @@ inputs:
   token:
     description: 'set github token'
     required: true
+  job:
+    description: 'set target job'
+    required: false
+    default: "jobkeeper"
   interval:
     description: 'set validate interval second (default 120)'
     required: false
@@ -26,6 +30,7 @@ runs:
   image: 'Dockerfile'
   args:
     - "--token ${{ inputs.token }}"
+    - "--job ${{ inputs.job }}"
     - "--interval ${{ inputs.interval }}"
     - "--owner ${{ inputs.owner }}"
     - "--repo ${{ inputs.repo }}"
