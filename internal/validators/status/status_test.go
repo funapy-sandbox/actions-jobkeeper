@@ -88,207 +88,181 @@ func TestCreateValidator(t *testing.T) {
 	}
 }
 
-// func Test_statusValidator_Validate(t *testing.T) {
-// 	type fields struct {
-// 		token         string
-// 		repo          string
-// 		owner         string
-// 		ref           string
-// 		targetJobName string
-// 		client        github.Client
-// 	}
-// 	type test struct {
-// 		fields  fields
-// 		ctx     context.Context
-// 		wantErr bool
-// 	}
-// 	tests := map[string]func(*testing.T) test{
-// 		"returns nil when validation is success": func(*testing.T) test {
-// 			t.Helper()
-//
-// 			var (
-// 				testOwner     = "test-owner"
-// 				testRepo      = "test-repo"
-// 				testRef       = "sha"
-// 				testOpts      = &github.ListOptions{}
-// 				targetJobName = "target-job"
-// 			)
-//
-// 			c := &mock.Client{
-// 				ListStatusesFunc: func(ctx context.Context, owner, repo, ref string, opts *github.ListOptions) ([]*github.RepoStatus, *github.Response, error) {
-// 					if testOwner != owner {
-// 						t.Errorf("ListStatuses owner = %s, want %s", owner, testOwner)
-// 					}
-// 					if testRepo != repo {
-// 						t.Errorf("ListStatuses repo = %s, want %s", repo, testRepo)
-// 					}
-// 					if testRef != ref {
-// 						t.Errorf("ListStatuses ref = %s, want %s", ref, testRef)
-// 					}
-// 					if !reflect.DeepEqual(opts, testOpts) {
-// 						t.Errorf("ListStatuses opts = %v, want %v", opts, testOpts)
-// 					}
-//
-// 					return []*github.RepoStatus{
-// 						{
-// 							Context: stringPtr("job-01"),
-// 							State:   stringPtr(successState),
-// 						},
-// 						{
-// 							Context: stringPtr("job-02"),
-// 							State:   stringPtr(successState),
-// 						},
-// 						{
-// 							Context: stringPtr(targetJobName),
-// 							State:   stringPtr(pendingState),
-// 						},
-// 					}, nil, nil
-// 				},
-// 			}
-// 			return test{
-// 				fields: fields{
-// 					client:        c,
-// 					targetJobName: targetJobName,
-// 					owner:         testOwner,
-// 					repo:          testRepo,
-// 					ref:           testRef,
-// 				},
-// 				wantErr: false,
-// 			}
-// 		},
-// 		"returns nil when there is one job": func(*testing.T) test {
-// 			t.Helper()
-//
-// 			var (
-// 				testOwner     = "test-owner"
-// 				testRepo      = "test-repo"
-// 				testRef       = "sha"
-// 				targetJobName = "target-job"
-// 			)
-//
-// 			c := &mock.Client{
-// 				ListStatusesFunc: func(ctx context.Context, owner, repo, ref string, opts *github.ListOptions) ([]*github.RepoStatus, *github.Response, error) {
-// 					return []*github.RepoStatus{
-// 						{
-// 							Context: stringPtr(targetJobName),
-// 							State:   stringPtr(pendingState),
-// 						},
-// 					}, nil, nil
-// 				},
-// 			}
-// 			return test{
-// 				fields: fields{
-// 					client:        c,
-// 					targetJobName: targetJobName,
-// 					owner:         testOwner,
-// 					repo:          testRepo,
-// 					ref:           testRef,
-// 				},
-// 				wantErr: false,
-// 			}
-// 		},
-// 		"returns error when ListStatuses returns an error": func(*testing.T) test {
-// 			c := &mock.Client{
-// 				ListStatusesFunc: func(ctx context.Context, owner, repo, ref string, opts *github.ListOptions) ([]*github.RepoStatus, *github.Response, error) {
-// 					return nil, nil, errors.New("err")
-// 				},
-// 			}
-// 			return test{
-// 				fields: fields{
-// 					client: c,
-// 				},
-// 				wantErr: true,
-// 			}
-// 		},
-// 		"returns validate error when the returned job status is empty": func(*testing.T) test {
-// 			c := &mock.Client{
-// 				ListStatusesFunc: func(ctx context.Context, owner, repo, ref string, opts *github.ListOptions) ([]*github.RepoStatus, *github.Response, error) {
-// 					return []*github.RepoStatus{}, nil, nil
-// 				},
-// 			}
-// 			return test{
-// 				fields: fields{
-// 					client: c,
-// 				},
-// 				wantErr: true,
-// 			}
-// 		},
-// 		"returns validate error when the success job count is invalid": func(*testing.T) test {
-// 			targetJobName := "target-job"
-//
-// 			c := &mock.Client{
-// 				ListStatusesFunc: func(ctx context.Context, owner, repo, ref string, opts *github.ListOptions) ([]*github.RepoStatus, *github.Response, error) {
-// 					return []*github.RepoStatus{
-// 						{
-// 							Context: stringPtr("job-01"),
-// 							State:   stringPtr(successState),
-// 						},
-// 						{
-// 							Context: stringPtr("job-02"),
-// 							State:   stringPtr(errorState),
-// 						},
-// 						{
-// 							Context: stringPtr(targetJobName),
-// 							State:   stringPtr(pendingState),
-// 						},
-// 					}, nil, nil
-// 				},
-// 			}
-// 			return test{
-// 				fields: fields{
-// 					client:        c,
-// 					targetJobName: targetJobName,
-// 				},
-// 				wantErr: true,
-// 			}
-// 		},
-// 		"returns validate error when the statuses contains context or state is nil and the success job count is invalid": func(*testing.T) test {
-// 			targetJobName := "target-job"
-//
-// 			c := &mock.Client{
-// 				ListStatusesFunc: func(ctx context.Context, owner, repo, ref string, opts *github.ListOptions) ([]*github.RepoStatus, *github.Response, error) {
-// 					return []*github.RepoStatus{
-// 						{
-// 							State: stringPtr(successState),
-// 						},
-// 						{
-// 							Context: stringPtr("job-02"),
-// 						},
-// 						{
-// 							Context: stringPtr(targetJobName),
-// 							State:   stringPtr(pendingState),
-// 						},
-// 					}, nil, nil
-// 				},
-// 			}
-// 			return test{
-// 				fields: fields{
-// 					client:        c,
-// 					targetJobName: targetJobName,
-// 				},
-// 				wantErr: true,
-// 			}
-// 		},
-// 	}
-// 	for name, fn := range tests {
-// 		t.Run(name, func(t *testing.T) {
-// 			tt := fn(t)
-// 			sv := &statusValidator{
-// 				token:         tt.fields.token,
-// 				repo:          tt.fields.repo,
-// 				owner:         tt.fields.owner,
-// 				ref:           tt.fields.ref,
-// 				targetJobName: tt.fields.targetJobName,
-// 				client:        tt.fields.client,
-// 			}
-// 			if err := sv.Validate(tt.ctx); (err != nil) != tt.wantErr {
-// 				t.Errorf("statusValidator.Validate() error = %v, wantErr %v", err, tt.wantErr)
-// 			}
-// 		})
-// 	}
-// }
-
 func Test_statusValidator_Validate(t *testing.T) {
+	type fields struct {
+		token         string
+		repo          string
+		owner         string
+		ref           string
+		targetJobName string
+		client        github.Client
+	}
+	type test struct {
+		fields  fields
+		ctx     context.Context
+		wantErr bool
+	}
+	tests := map[string]test{
+		"returns nil when validation is success": func() test {
+			var (
+				testOwner     = "test-owner"
+				testRepo      = "test-repo"
+				testRef       = "sha"
+				targetJobName = "target-job"
+			)
+
+			c := &mock.Client{
+				GetCombinedStatusFunc: func(ctx context.Context, owner, repo, ref string, opts *github.ListOptions) (*github.CombinedStatus, *github.Response, error) {
+					return &github.CombinedStatus{
+						Statuses: []github.RepoStatus{
+							{
+								Context: stringPtr("job-01"),
+								State:   stringPtr(successState),
+							},
+							{
+								Context: stringPtr("job-02"),
+								State:   stringPtr(successState),
+							},
+							{
+								Context: stringPtr(targetJobName),
+								State:   stringPtr(pendingState),
+							},
+						},
+					}, nil, nil
+				},
+				ListCheckRunsForRefFunc: func(ctx context.Context, owner, repo, ref string, opts *github.ListCheckRunsOptions) (*github.ListCheckRunsResults, *github.Response, error) {
+					return &github.ListCheckRunsResults{}, nil, nil
+				},
+			}
+			return test{
+				fields: fields{
+					client:        c,
+					targetJobName: targetJobName,
+					owner:         testOwner,
+					repo:          testRepo,
+					ref:           testRef,
+				},
+				wantErr: false,
+			}
+		}(),
+		"returns nil when there is one job": func() test {
+			var (
+				testOwner     = "test-owner"
+				testRepo      = "test-repo"
+				testRef       = "sha"
+				targetJobName = "target-job"
+			)
+
+			c := &mock.Client{
+				GetCombinedStatusFunc: func(ctx context.Context, owner, repo, ref string, opts *github.ListOptions) (*github.CombinedStatus, *github.Response, error) {
+					return &github.CombinedStatus{
+						Statuses: []github.RepoStatus{
+							{
+								Context: stringPtr(targetJobName),
+								State:   stringPtr(pendingState),
+							},
+						},
+					}, nil, nil
+				},
+				ListCheckRunsForRefFunc: func(ctx context.Context, owner, repo, ref string, opts *github.ListCheckRunsOptions) (*github.ListCheckRunsResults, *github.Response, error) {
+					return &github.ListCheckRunsResults{}, nil, nil
+				},
+			}
+			return test{
+				fields: fields{
+					client:        c,
+					targetJobName: targetJobName,
+					owner:         testOwner,
+					repo:          testRepo,
+					ref:           testRef,
+				},
+				wantErr: false,
+			}
+		}(),
+		"returns error when listStatuses returns an error": func() test {
+			c := &mock.Client{
+				GetCombinedStatusFunc: func(ctx context.Context, owner, repo, ref string, opts *github.ListOptions) (*github.CombinedStatus, *github.Response, error) {
+					return nil, nil, errors.New("error")
+				},
+			}
+			return test{
+				fields: fields{
+					client: c,
+				},
+				wantErr: true,
+			}
+		}(),
+		"returns validate error when the returned job status is empty": func() test {
+			c := &mock.Client{
+				GetCombinedStatusFunc: func(ctx context.Context, owner, repo, ref string, opts *github.ListOptions) (*github.CombinedStatus, *github.Response, error) {
+					return &github.CombinedStatus{
+						Statuses: []github.RepoStatus{},
+					}, nil, nil
+				},
+				ListCheckRunsForRefFunc: func(ctx context.Context, owner, repo, ref string, opts *github.ListCheckRunsOptions) (*github.ListCheckRunsResults, *github.Response, error) {
+					return &github.ListCheckRunsResults{}, nil, nil
+				},
+			}
+			return test{
+				fields: fields{
+					client: c,
+				},
+				wantErr: false,
+			}
+		}(),
+		"returns validate error when the success job count is invalid": func() test {
+			targetJobName := "target-job"
+
+			c := &mock.Client{
+				GetCombinedStatusFunc: func(ctx context.Context, owner, repo, ref string, opts *github.ListOptions) (*github.CombinedStatus, *github.Response, error) {
+					return &github.CombinedStatus{
+						Statuses: []github.RepoStatus{
+							{
+								Context: stringPtr("job-01"),
+								State:   stringPtr(successState),
+							},
+							{
+								Context: stringPtr("job-02"),
+								State:   stringPtr(errorState),
+							},
+							{
+								Context: stringPtr(targetJobName),
+								State:   stringPtr(pendingState),
+							},
+						},
+					}, nil, nil
+				},
+				ListCheckRunsForRefFunc: func(ctx context.Context, owner, repo, ref string, opts *github.ListCheckRunsOptions) (*github.ListCheckRunsResults, *github.Response, error) {
+					return &github.ListCheckRunsResults{}, nil, nil
+				},
+			}
+			return test{
+				fields: fields{
+					client:        c,
+					targetJobName: targetJobName,
+				},
+				wantErr: true,
+			}
+		}(),
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			sv := &statusValidator{
+				token:         tt.fields.token,
+				repo:          tt.fields.repo,
+				owner:         tt.fields.owner,
+				ref:           tt.fields.ref,
+				targetJobName: tt.fields.targetJobName,
+				client:        tt.fields.client,
+			}
+			if err := sv.Validate(tt.ctx); (err != nil) != tt.wantErr {
+				t.Errorf("statusValidator.Validate() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_statusValidator_listStatues(t *testing.T) {
 	type fields struct {
 		token         string
 		repo          string
