@@ -2,6 +2,7 @@ package status
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/funapy-sandbox/actions-jobkeeper/internal/github"
 	"github.com/funapy-sandbox/actions-jobkeeper/internal/validators"
@@ -43,11 +44,14 @@ func (sv *statusValidator) Validate(ctx context.Context) error {
 		return nil
 	}
 
+	fmt.Println(status)
+
 	var successJobCnt int
 	for _, status := range status {
 		if status.Context == nil || status.State == nil {
 			continue
 		}
+		fmt.Println(status.Context)
 		if *status.Context != sv.targetJobName && *status.State == successState {
 			successJobCnt++
 		}
