@@ -1,0 +1,22 @@
+name: test
+
+on:
+  push:
+    branches:
+      - master
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  jobkeeper:
+    runs-on: ubuntu-latest
+    name: check other status
+    steps:
+      - uses: funapy-sandbox/actions-jobkeeper@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          owner: "funapy-sandbox"
+          repo: "actions-jobkeeper"
+          ref: ${{ github.event.pull_request.head.sha }}

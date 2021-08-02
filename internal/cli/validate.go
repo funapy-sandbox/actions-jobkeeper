@@ -40,7 +40,6 @@ func validateCmd() *cobra.Command {
 	}
 
 	cmd.PersistentFlags().StringVarP(&targetJobName, "job", "j", defaultJobName, "set target job name")
-	cmd.MarkPersistentFlagRequired("job")
 
 	cmd.PersistentFlags().StringVarP(&ghOwner, "owner", "o", "", "set owner of github repository")
 	cmd.MarkPersistentFlagRequired("owpner")
@@ -52,10 +51,8 @@ func validateCmd() *cobra.Command {
 	cmd.MarkPersistentFlagRequired("ref")
 
 	cmd.PersistentFlags().UintVar(&timeoutSecond, "timeout", 600, "set validate timeout second")
-	cmd.MarkPersistentFlagRequired("timeout")
 
-	cmd.PersistentFlags().UintVar(&validateInvalSecond, "interval", 120, "set validate interval second")
-	cmd.MarkPersistentFlagRequired("interval")
+	cmd.PersistentFlags().UintVar(&validateInvalSecond, "interval", 10, "set validate interval second")
 
 	return cmd
 }
