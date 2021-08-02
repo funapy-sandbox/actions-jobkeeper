@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     name: check other status
     steps:
-      - uses: funapy-sandbox/actions-jobkeeper@master
+      - uses: funapy-sandbox/actions-jobkeeper@main
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           owner: "funapy-sandbox"
