@@ -22,6 +22,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 RUN mkdir -p $GOPATH/src
 
+WORKDIR ${GOPATH}/src/github.com/${ORG}/${REPO}
+
 COPY go.mod .
 COPY go.sum .
 
@@ -33,8 +35,7 @@ COPY cmd .
 WORKDIR ${GOPATH}/src/github.com/${ORG}/${REPO}/internal
 COPY internal .
 
-WORKDIR ${GOPATH}/src/github.com/${ORG}/${REPO}/pkg
-COPY pkg .
+WORKDIR ${GOPATH}/src/github.com/${ORG}/${REPO}
 
 RUN go build ./cmd/${APP_NAME} \
     && upx ${UPX_OPTIONS} -o "/usr/bin/${APP_NAME}" "${APP_NAME}"
