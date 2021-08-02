@@ -71,7 +71,6 @@ func doValidateCmd(ctx context.Context, logger logger, vs ...validators.Validato
 		case <-timeoutT.C:
 			return errors.New("validation is timeout")
 		case <-invalT.C:
-			logger.Println("start to validate")
 			var successCnt int
 			for _, validator := range vs {
 				err := validator.Validate(ctx)
@@ -85,7 +84,6 @@ func doValidateCmd(ctx context.Context, logger logger, vs ...validators.Validato
 					successCnt++
 				}
 			}
-			logger.Println("finish to validate")
 			if successCnt == len(vs) {
 				return nil
 			}

@@ -113,5 +113,6 @@ func (sv *statusValidator) listStatuses(ctx context.Context) ([]*contextStatus, 
 
 		contextStatuses = append(contextStatuses, contextStatus)
 	}
-	return nil, nil
+
+	return contextStatuses, nil
 }
