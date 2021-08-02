@@ -1,6 +1,9 @@
 name: 'Check other job status'
 description: 'Check other job status'
 inputs:
+  token:
+    description: 'set github token'
+    required: true
   interval:
     description: 'set validate interval second (default 120)'
     required: false
@@ -22,6 +25,7 @@ runs:
   using: 'docker'
   image: 'Dockerfile'
   args:
+    - "--token ${{ inputs.token }}"
     - "--interval ${{ inputs.interval }}"
     - "--owner ${{ inputs.owner }}"
     - "--repo ${{ inputs.repo }}"
