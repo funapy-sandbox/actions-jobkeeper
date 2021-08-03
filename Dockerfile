@@ -37,7 +37,7 @@ COPY internal .
 
 WORKDIR ${GOPATH}/src/github.com/${ORG}/${REPO}
 
-RUN go build ./cmd/${APP_NAME} \
+RUN CGO_ENABLED=0 go build ./cmd/${APP_NAME} \
     && upx ${UPX_OPTIONS} -o "/usr/bin/${APP_NAME}" "${APP_NAME}"
 
 FROM ${DISTROLESS_IMAGE}:${DISTROLESS_IMAGE_TAG}

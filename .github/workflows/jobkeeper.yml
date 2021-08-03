@@ -12,7 +12,7 @@ on:
 jobs:
   jobkeeper:
     runs-on: ubuntu-latest
-    name: check other status
+    name: jobkeeper
     steps:
       - uses: funapy-sandbox/actions-jobkeeper@main
         with:
