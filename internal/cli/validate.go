@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const defaultJobName = "jobkeeper"
+const defaultJobName = "check-other-job-status"
 
 // Tease variables will be set by command line flags.
 var (

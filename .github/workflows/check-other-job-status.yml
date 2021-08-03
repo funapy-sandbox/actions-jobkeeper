@@ -10,9 +10,9 @@ on:
       - main
 
 jobs:
-  jobkeeper:
+  check-other-job-status:
     runs-on: ubuntu-latest
-    name: jobkeeper
+    name: check-other-job-status
     steps:
       - uses: funapy-sandbox/actions-jobkeeper@main
         with:
