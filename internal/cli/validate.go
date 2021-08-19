@@ -3,6 +3,8 @@ package cli
 import (
 	"context"
 	"errors"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/funapy-sandbox/actions-jobkeeper/internal/github"
@@ -15,7 +17,6 @@ const defaultJobName = "check-other-job-status"
 
 // Tease variables will be set by command line flags.
 var (
-	ghOwner             string
 	ghRepo              string
 	ghRef               string
 	timeoutSecond       uint
@@ -30,9 +31,14 @@ func validateCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
 
+			owner, repo := ownerAndRepository(ghRepo)
+			if len(owner) == 0 || len(repo) == 0 {
+				return fmt.Errorf("github owner or repository is empty. owner: %s, repository: %s", owner, repo)
+			}
+
 			statusValidator := status.CreateValidator(github.NewClient(ctx, ghToken),
 				status.WithTargetJob(targetJobName),
-				status.WithGitHubOwnerAndRepo(ghOwner, ghRepo),
+				status.WithGitHubOwnerAndRepo(owner, repo),
 				status.WithGitHubRef(ghRef),
 			)
 			return doValidateCmd(ctx, cmd, statusValidator)
@@ -40,9 +46,6 @@ func validateCmd() *cobra.Command {
 	}
 
 	cmd.PersistentFlags().StringVarP(&targetJobName, "job", "j", defaultJobName, "set target job name")
-
-	cmd.PersistentFlags().StringVarP(&ghOwner, "owner", "o", "", "set owner of github repository")
-	cmd.MarkPersistentFlagRequired("owpner")
 
 	cmd.PersistentFlags().StringVarP(&ghRepo, "repo", "r", "", "set github repository")
 	cmd.MarkPersistentFlagRequired("repo")
@@ -55,6 +58,20 @@ func validateCmd() *cobra.Command {
 	cmd.PersistentFlags().UintVar(&validateInvalSecond, "interval", 10, "set validate interval second")
 
 	return cmd
+}
+
+func ownerAndRepository(str string) (owner string, repo string) {
+	sp := strings.Split(str, "/")
+	switch len(sp) {
+	case 0:
+		return "", ""
+	case 1:
+		return sp[0], ""
+	case 2:
+		return sp[0], sp[1]
+	default:
+		return sp[0], strings.Join(sp[1:], "/")
+	}
 }
 
 func doValidateCmd(ctx context.Context, logger logger, vs ...validators.Validator) error {
