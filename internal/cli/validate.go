@@ -32,6 +32,7 @@ func validateCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
 
+			fmt.Println(ghRef)
 			fmt.Println(os.Getenv("GITHUB_REPOSITORY"))
 			fmt.Println(os.Getenv("GITHUB_REPOSITORY_OWNER"))
 
