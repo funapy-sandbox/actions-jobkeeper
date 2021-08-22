@@ -55,6 +55,10 @@ func validateCmd() *cobra.Command {
 				return fmt.Errorf("github owner or repository is empty. owner: %s, repository: %s", owner, repo)
 			}
 
+			fmt.Println(owner)
+			fmt.Println(repo)
+			fmt.Println("****************************")
+
 			statusValidator := status.CreateValidator(github.NewClient(ctx, ghToken),
 				status.WithTargetJob(targetJobName),
 				status.WithGitHubOwnerAndRepo(owner, repo),
