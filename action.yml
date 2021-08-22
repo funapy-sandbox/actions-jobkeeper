@@ -27,7 +27,7 @@ runs:
     - "validate"
     - "--token=${{ inputs.token }}"
     - "--job=${{ inputs.job }}"
-    - "--repo=${{ selects.REPO }}"
+    - "--repo=${{ secrets.REPO }}"
     - "--ref=${{ inputs.ref }}"
     - "--interval=${{ inputs.interval }}"
     - "--timeout=${{ inputs.timeout }}"
