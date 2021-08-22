@@ -27,7 +27,7 @@ runs:
     - "validate"
     - "--token=${{ inputs.token }}"
     - "--job=${{ inputs.job }}"
-    - "--repo=${{ secrets.REPO }}"
+    - "--repo=${{ env.GITHUB_REPOSITORY }}"
     - "--ref=${{ inputs.ref }}"
     - "--interval=${{ inputs.interval }}"
     - "--timeout=${{ inputs.timeout }}"

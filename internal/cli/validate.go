@@ -18,7 +18,6 @@ const defaultJobName = "check-other-job-status"
 
 // Tease variables will be set by command line flags.
 var (
-	ghOwner             string
 	ghRepo              string
 	ghRef               string
 	timeoutSecond       uint
@@ -40,7 +39,6 @@ func validateCmd() *cobra.Command {
 			fmt.Println(validateInvalSecond)
 			fmt.Println(targetJobName)
 			fmt.Println(ghRepo)
-			fmt.Println(ghOwner)
 			fmt.Println(os.Getenv("GITHUB_REPOSITORY"))
 			fmt.Println(os.Getenv("GITHUB_REPOSITORY_OWNER"))
 			fmt.Println("****************************")
@@ -61,7 +59,6 @@ func validateCmd() *cobra.Command {
 
 	cmd.PersistentFlags().StringVarP(&targetJobName, "job", "j", defaultJobName, "set target job name")
 
-	cmd.PersistentFlags().StringVarP(&ghOwner, "owner", "o", "", "set github repository owner")
 	cmd.PersistentFlags().StringVarP(&ghRepo, "repo", "r", "", "set github repository")
 
 	cmd.PersistentFlags().StringVar(&ghRef, "ref", "", "set ref of github repository. the ref can be a SHA, a branch name, or tag name")
