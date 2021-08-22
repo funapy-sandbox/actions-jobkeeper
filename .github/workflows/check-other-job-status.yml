@@ -15,3 +15,5 @@ jobs:
     name: check-other-job-status
     steps:
       - uses: funapy-sandbox/actions-jobkeeper@main
+    with:
+      token: ${{ secrets.GITHUB_TOKEN }}
