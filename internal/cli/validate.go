@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -30,6 +31,9 @@ func validateCmd() *cobra.Command {
 		Short: "Validate github actions job",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
+
+			fmt.Println(os.Getenv("GITHUB_REPOSITORY"))
+			fmt.Println(os.Getenv("GITHUB_REPOSITORY_OWNER"))
 
 			owner, repo := ownerAndRepository(ghRepo)
 			if len(owner) == 0 || len(repo) == 0 {
