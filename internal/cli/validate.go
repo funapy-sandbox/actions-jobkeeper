@@ -32,9 +32,15 @@ func validateCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
 
+			fmt.Println("env result")
+			fmt.Println("****************************")
 			fmt.Println(ghRef)
+			fmt.Println(timeoutSecond)
+			fmt.Println(validateInvalSecond)
+			fmt.Println(targetJobName)
 			fmt.Println(os.Getenv("GITHUB_REPOSITORY"))
 			fmt.Println(os.Getenv("GITHUB_REPOSITORY_OWNER"))
+			fmt.Println("****************************")
 
 			owner, repo := ownerAndRepository(ghRepo)
 			if len(owner) == 0 || len(repo) == 0 {
