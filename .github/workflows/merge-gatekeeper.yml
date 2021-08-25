@@ -1,16 +1,13 @@
-name: merge-gatekeeper
+name: "Merge Gatekeeper"
 
 on:
-  push:
-    branches:
-      - master
-      - main
   pull_request:
     branches:
       - main
+      - master
 
 jobs:
-  check-other-job-status:
+  merge-gatekeeper:
     runs-on: ubuntu-latest
     name: merge-gatekeeper
     steps:
