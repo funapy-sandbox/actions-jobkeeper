@@ -2,7 +2,7 @@ ARG GO_VERSION=latest
 ARG DISTROLESS_IMAGE=gcr.io/distroless/static
 ARG DISTROLESS_IMAGE_TAG=nonroot
 ARG UPX_OPTION=-9
-ARG MAINTAINER="hlts2 <hiroto.funakoshi.hiroto@gmail.com>"
+ARG MAINTAINER="rytswd <rytswd@gmail.com>,hlts2 <hiroto.funakoshi.hiroto@gmail.com>"
 
 FROM golang:${GO_VERSION} AS builder
 
@@ -11,8 +11,8 @@ ARG UPX_OPTIONS
 ENV GO111MODULE on
 ENV LANG en_US.UTF-8
 ENV ORG funapy-sandbox
-ENV REPO actions-jobkeeper
-ENV APP_NAME ghajob
+ENV REPO merge-gatekeeper
+ENV APP_NAME merge-gatekeeper
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     upx \
@@ -43,10 +43,10 @@ RUN CGO_ENABLED=0 go build ./cmd/${APP_NAME} \
 FROM ${DISTROLESS_IMAGE}:${DISTROLESS_IMAGE_TAG}
 LABEL maintainer "${MAINTAINER}"
 
-ENV APP_NAME ghajob
+ENV APP_NAME merge-gatekeeper
 
 COPY --from=builder /usr/bin/${APP_NAME} /go/bin/${APP_NAME}
 
 USER nonroot:nonroot
 
-ENTRYPOINT ["/go/bin/ghajob"]
+ENTRYPOINT ["/go/bin/merge-gatekeeper"]

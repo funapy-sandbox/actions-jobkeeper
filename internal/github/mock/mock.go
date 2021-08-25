@@ -3,7 +3,7 @@ package mock
 import (
 	"context"
 
-	"github.com/funapy-sandbox/actions-jobkeeper/internal/github"
+	"github.com/funapy-sandbox/merge-gatekeeper/internal/github"
 )
 
 type Client struct {

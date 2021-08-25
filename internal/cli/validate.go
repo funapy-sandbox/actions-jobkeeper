@@ -8,17 +8,18 @@ import (
 	"strings"
 	"time"
 
-	"github.com/funapy-sandbox/actions-jobkeeper/internal/github"
-	"github.com/funapy-sandbox/actions-jobkeeper/internal/validators"
-	"github.com/funapy-sandbox/actions-jobkeeper/internal/validators/status"
 	"github.com/spf13/cobra"
+
+	"github.com/funapy-sandbox/merge-gatekeeper/internal/github"
+	"github.com/funapy-sandbox/merge-gatekeeper/internal/validators"
+	"github.com/funapy-sandbox/merge-gatekeeper/internal/validators/status"
 )
 
-const defaultJobName = "check-other-job-status"
+const defaultJobName = "merge-gatekeeper"
 
-// Tease variables will be set by command line flags.
+// These variables will be set by command line flags.
 var (
-	ghRepo              string
+	ghRepo              string // e.g) funapy-sandbox/merge-gatekeeper
 	ghRef               string
 	timeoutSecond       uint
 	validateInvalSecond uint
@@ -28,42 +29,29 @@ var (
 func validateCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "validate",
-		Short: "Validate github actions job",
-		PreRunE: func(cmd *cobra.Command, args []string) error {
-			repo := os.Getenv("GITHUB_REPOSITORY")
-			if len(repo) != 0 {
-				ghRepo = repo
+		Short: "Validate other github actions job",
+		PreRun: func(cmd *cobra.Command, args []string) {
+			str := os.Getenv("GITHUB_REPOSITORY")
+			if len(str) != 0 {
+				ghRepo = str
 			}
-			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
-
-			fmt.Println("env result")
-			fmt.Println("****************************")
-			fmt.Println(ghRef)
-			fmt.Println(timeoutSecond)
-			fmt.Println(validateInvalSecond)
-			fmt.Println(targetJobName)
-			fmt.Println(ghRepo)
-			fmt.Println(os.Getenv("GITHUB_REPOSITORY"))
-			fmt.Println(os.Getenv("GITHUB_REPOSITORY_OWNER"))
-			fmt.Println("****************************")
 
 			owner, repo := ownerAndRepository(ghRepo)
 			if len(owner) == 0 || len(repo) == 0 {
 				return fmt.Errorf("github owner or repository is empty. owner: %s, repository: %s", owner, repo)
 			}
 
-			fmt.Println(owner)
-			fmt.Println(repo)
-			fmt.Println("****************************")
-
-			statusValidator := status.CreateValidator(github.NewClient(ctx, ghToken),
+			statusValidator, err := status.CreateValidator(github.NewClient(ctx, ghToken),
 				status.WithTargetJob(targetJobName),
 				status.WithGitHubOwnerAndRepo(owner, repo),
 				status.WithGitHubRef(ghRef),
 			)
+			if err != nil {
+				return fmt.Errorf("failed to create validator: %w", err)
+			}
 			return doValidateCmd(ctx, cmd, statusValidator)
 		},
 	}
@@ -73,9 +61,9 @@ func validateCmd() *cobra.Command {
 	cmd.PersistentFlags().StringVarP(&ghRepo, "repo", "r", "", "set github repository")
 
 	cmd.PersistentFlags().StringVar(&ghRef, "ref", "", "set ref of github repository. the ref can be a SHA, a branch name, or tag name")
+	cmd.MarkPersistentFlagRequired("ref")
 
 	cmd.PersistentFlags().UintVar(&timeoutSecond, "timeout", 600, "set validate timeout second")
-
 	cmd.PersistentFlags().UintVar(&validateInvalSecond, "interval", 10, "set validate interval second")
 
 	return cmd
@@ -95,6 +83,13 @@ func ownerAndRepository(str string) (owner string, repo string) {
 	}
 }
 
+func debug(logger logger, name string) func() {
+	logger.Printf("start %s processing....\n", name)
+	return func() {
+		logger.Printf("finish %s processing\n", name)
+	}
+}
+
 func doValidateCmd(ctx context.Context, logger logger, vs ...validators.Validator) error {
 	timeoutT := time.NewTicker(time.Duration(timeoutSecond) * time.Second)
 	defer timeoutT.Stop()
@@ -102,29 +97,48 @@ func doValidateCmd(ctx context.Context, logger logger, vs ...validators.Validato
 	invalT := time.NewTicker(time.Duration(validateInvalSecond) * time.Second)
 	defer invalT.Stop()
 
+	defer debug(logger, "validation loop")()
+
 	for {
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-timeoutT.C:
-			return errors.New("validation is timeout")
+			return errors.New("validation timed out")
 		case <-invalT.C:
 			var successCnt int
-			for _, validator := range vs {
-				err := validator.Validate(ctx)
+			for _, v := range vs {
+				ok, err := validate(ctx, v, logger)
 				if err != nil {
-					if !errors.Is(err, validators.ErrValidate) {
-						return err
-					}
-					logger.PrintErrln(err)
-					break
-				} else {
+					return err
+				}
+				if ok {
 					successCnt++
 				}
 			}
-			if successCnt == len(vs) {
-				return nil
+			if successCnt != len(vs) {
+				logger.PrintErrln("validation failed")
+				break
 			}
+
+			logger.Println("all validations successful")
+			return nil
 		}
 	}
+}
+
+func validate(ctx context.Context, v validators.Validator, logger logger) (bool, error) {
+	defer debug(logger, "validator: "+v.Name())()
+
+	st, err := v.Validate(ctx)
+	if err != nil {
+		return false, fmt.Errorf("error occurs\tvalidator: %s, err: %v", v.Name(), err)
+	}
+
+	logger.Println(st.Detail())
+
+	if !st.IsSuccess() {
+		return false, nil
+	}
+	return true, nil
 }

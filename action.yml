@@ -1,5 +1,5 @@
-name: 'Check other job status'
-description: 'Check other job status'
+name: 'Merge Gatekeeper'
+description: 'Get better merge control'
 inputs:
   token:
     description: 'set github token'
@@ -7,7 +7,7 @@ inputs:
   job:
     description: 'set target job'
     required: false
-    default: "check-other-job-status"
+    default: "merge-gatekeeper"
   interval:
     description: 'set validate interval second (default 120)'
     required: false
@@ -27,6 +27,6 @@ runs:
     - "validate"
     - "--token=${{ inputs.token }}"
     - "--job=${{ inputs.job }}"
-    - "--ref=${{ inputs.ref }}"
     - "--interval=${{ inputs.interval }}"
+    - "--ref=${{ inputs.ref }}"
     - "--timeout=${{ inputs.timeout }}"

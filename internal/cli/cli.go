@@ -8,15 +8,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// Tease variables will be set by command line flags.
+// These variables will be set by command line flags.
 var (
 	ghToken string
 )
 
 func Run(version string, args ...string) error {
 	cmd := &cobra.Command{
-		Use:     "ghajob",
-		Short:   "Manage github actions job",
+		Use:     "merge-gatekeeper",
+		Short:   "Get more refined merge control",
 		Version: version,
 	}
 	cmd.PersistentFlags().StringVarP(&ghToken, "token", "t", "", "set github token")
