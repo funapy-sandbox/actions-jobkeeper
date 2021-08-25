@@ -1,4 +1,4 @@
-name: test
+name: merge-gatekeeper
 
 on:
   push:
@@ -12,8 +12,8 @@ on:
 jobs:
   check-other-job-status:
     runs-on: ubuntu-latest
-    name: check-other-job-status
+    name: merge-gatekeeper
     steps:
-      - uses: funapy-sandbox/actions-jobkeeper@main
+      - uses: funapy-sandbox/merge-gatekeeper@main
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
